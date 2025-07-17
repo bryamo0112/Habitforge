@@ -1,0 +1,84 @@
+.dashboard-container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+/* Header splits left and right columns */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+/* Left side buttons container */
+.dashboard-left-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 120px; /* 👈 Adds space to push it below the greeting */
+}
+
+/* Style for the three left buttons */
+.dashboard-btn {
+  padding: 10px 20px;
+  background-color: #3a86ff;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.25s ease;
+  width: 180px;
+  text-align: center;
+}
+
+.dashboard-btn:hover {
+  background-color: #265fcc;
+}
+
+/* Right side greeting + logout container */
+.greeting-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* Greeting text + profile pic */
+.greeting {
+  display: flex;
+  align-items: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.dashboard-profile-pic {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-left: 12px;
+  object-fit: cover;
+  border: 2px solid #666;
+}
+
+/* Logout button */
+.logout-button {
+  padding: 8px 16px;
+  background-color: #ff4d4d;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+
+.logout-button:hover {
+  background-color: #cc0000;
+}
+
+
+

@@ -1,0 +1,136 @@
+.profile-prompt-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  background-color: #fff;
+  padding: 2.5rem 3rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  width: 500px;
+  margin-top: 2rem;
+}
+
+/* Default profile picture size */
+.profile-picture {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Clean, readable question text */
+.profile-question {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #1f1f1f;
+  text-align: center;
+  line-height: 1.4;
+  max-width: 90%;
+}
+
+/* Button layout */
+.profile-button-group {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Normal-sized buttons */
+.profile-button-group button {
+  padding: 12px 50px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+/* Yes button */
+.profile-button-group button:first-of-type {
+  background-color: #1976d2;
+  color: white;
+}
+
+.profile-button-group button:first-of-type:hover {
+  background-color: #1565c0;
+  transform: scale(1.05);
+}
+
+/* No button */
+.profile-button-group button:last-of-type {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.profile-button-group button:last-of-type:hover {
+  background-color: #d5d5d5;
+  transform: scale(1.05);
+}
+/* Modal background overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* Modal content */
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  width: 350px;
+  text-align: center;
+}
+
+.modal-buttons {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-around;
+}
+
+.modal-buttons button {
+  padding: 0.5rem 2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 8px;
+  border: none;
+}
+
+.modal-buttons button:first-child {
+  background-color: #1976d2;
+  color: white;
+}
+
+.modal-buttons button:first-child:hover {
+  background-color: #1565c0;
+}
+
+.modal-buttons button:last-child {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.modal-buttons button:last-child:hover {
+  background-color: #d5d5d5;
+}
+
+.modal-profile-preview {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 1rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}

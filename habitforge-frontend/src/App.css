@@ -1,0 +1,122 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f2f5;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+h1 {
+  color: #333;
+  margin-bottom: 2rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 300px;
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+  color: #444;
+}
+
+input {
+  padding: 8px;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+input:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+/* General button styles */
+button {
+  padding: 10px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Login button */
+button:nth-of-type(2) {
+  background-color: #4caf50;
+  color: white;
+}
+
+button:nth-of-type(2):hover {
+  background-color: #45a049;
+}
+
+/* Sign Up button */
+.signup-button {
+  background-color: #1976d2;
+  color: white;
+}
+
+.signup-button:hover {
+  background-color: #1565c0;
+}
+
+/* Password toggle styles */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  flex: 1;
+  padding-right: 2.5rem; /* space for the icon */
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.password-toggle img {
+  display: block;
+  pointer-events: none; /* let span handle clicks */
+  width: 24px;
+  height: 24px;
+}
+
+/* Success and error messages */
+.message {
+  text-align: center;
+  margin-top: 1rem;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.message.success {
+  color: green;
+}
+
+.message.error {
+  color: red;
+}
