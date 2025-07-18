@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import eyeOpenIcon from './assets/icons8-eye-24.png';
@@ -36,18 +35,13 @@ function App() {
 
   const fetchProfileImage = async (username) => {
     try {
-      const imgResponse = await fetch(
-        `http://localhost:8080/api/users/${username}/profile-picture?cb=${Date.now()}`
-      );
-      if (!imgResponse.ok) {
-        console.warn(`Profile image fetch failed with status ${imgResponse.status}: ${imgResponse.statusText}`);
-        throw new Error('No profile image found');
-      }
-      const blob = await imgResponse.blob();
+      const res = await fetch(`http://localhost:8080/api/users/${username}/profile-picture?cb=${Date.now()}`);
+      if (!res.ok) throw new Error('No profile image found');
+      const blob = await res.blob();
       const objectURL = URL.createObjectURL(blob);
       setProfileImage(objectURL);
     } catch (err) {
-      console.warn('Falling back to default profile image:', err.message);
+      console.warn('Using default profile image:', err.message);
       setProfileImage(null);
     }
   };
@@ -85,8 +79,8 @@ function App() {
       try {
         const userData = JSON.parse(savedUser);
         setDashboardUser({ username: userData.username });
-        setIsLoggedIn(true);
         setToken(savedToken);
+        setIsLoggedIn(true);
 
         if (userData.profilePicUrl) {
           setProfileImage(userData.profilePicUrl);
@@ -100,16 +94,10 @@ function App() {
           setShowDashboard(true);
         }
       } catch (e) {
-        console.error("Error restoring session:", e);
+        console.error("Session restore error:", e);
       }
     }
   }, []);
-
-  useEffect(() => {
-    if (dashboardUser && showDashboard) {
-      fetchProfileImage(dashboardUser.username);
-    }
-  }, [dashboardUser, showDashboard]);
 
   const handleSignUp = async () => {
     if (!username.trim() || !password.trim()) {
@@ -118,76 +106,73 @@ function App() {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/users/signup', {
+      const res = await fetch('http://localhost:8080/api/users/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
 
-      if (response.ok) {
+      if (res.ok) {
         setMessage('User account successfully created.');
         setUsername('');
         setPassword('');
       } else {
-        const errorText = await response.text();
-        console.error(`Signup failed with status ${response.status}: ${errorText}`);
-        setMessage(`Error ${response.status}: ${errorText}`);
+        const errorText = await res.text();
+        console.error(`Signup failed: ${errorText}`);
+        setMessage(`Error ${res.status}: ${errorText}`);
       }
-    } catch (error) {
-      console.error("Signup request error:", error);
-      setMessage(`Error: ${error.message}`);
+    } catch (err) {
+      console.error("Signup request error:", err);
+      setMessage(`Error: ${err.message}`);
     }
   };
 
   const handleLogin = async () => {
-  if (!username.trim() || !password.trim()) {
-    setMessage('Error: Username and password cannot be empty.');
-    return;
-  }
-
-  try {
-    const response = await fetch('http://localhost:8080/api/users/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-
-      setIsLoggedIn(true);
-      setMessage('');
-      setUsername('');
-      setPassword('');
-      setDashboardUser({ username: data.username });
-      setToken(data.token);
-
-      // Save token and user data separately
-      localStorage.setItem('jwtToken', data.token);
-      localStorage.setItem('habitAppUser', JSON.stringify(data));
-
-      if (data.profilePicUrl) {
-        setProfileImage(data.profilePicUrl);
-      } else {
-        setProfileImage(null);
-      }
-
-      if (data.hasBeenPromptedForProfilePic === false) {
-        setShowProfilePrompt(true);
-      } else {
-        setShowDashboard(true);
-      }
-    } else {
-      const errorText = await response.text();
-      console.error(`Login failed with status ${response.status}: ${errorText}`);
-      setMessage(`Error ${response.status}: ${errorText}`);
+    if (!username.trim() || !password.trim()) {
+      setMessage('Error: Username and password cannot be empty.');
+      return;
     }
-  } catch (error) {
-    console.error("Login request error:", error);
-    setMessage(`Error: ${error.message}`);
-  }
-};
 
+    try {
+      const res = await fetch('http://localhost:8080/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+
+        setIsLoggedIn(true);
+        setMessage('');
+        setUsername('');
+        setPassword('');
+        setDashboardUser({ username: data.username });
+        setToken(data.token);
+        localStorage.setItem('jwtToken', data.token);
+        localStorage.setItem('habitAppUser', JSON.stringify(data));
+
+        if (data.profilePicUrl) {
+          setProfileImage(data.profilePicUrl);
+        } else {
+          setProfileImage(null);
+        }
+
+        if (data.hasBeenPromptedForProfilePic === false) {
+          setShowProfilePrompt(true);
+        } else {
+          setShowDashboard(true);
+        }
+      } else {
+        const errorText = await res.text();
+        console.error(`Login failed: ${errorText}`);
+        setMessage(`Error ${res.status}: ${errorText}`);
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setMessage(`Error: ${err.message}`);
+    }
+  };
 
   const handleProfileChoice = async (choice, imageFile) => {
     if (choice && imageFile) {
@@ -195,51 +180,44 @@ function App() {
       formData.append('image', imageFile);
 
       try {
-        const uploadResponse = await fetch(
+        const res = await fetch(
           `http://localhost:8080/api/users/${dashboardUser.username}/upload-profile-picture`,
           {
             method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
             body: formData,
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
           }
         );
-
-        if (uploadResponse.ok) {
+        if (res.ok) {
           await fetchProfileImage(dashboardUser.username);
         } else {
-          const errText = await uploadResponse.text();
-          console.error(`Upload failed with status ${uploadResponse.status}: ${errText}`);
+          console.error('Image upload failed:', await res.text());
           setProfileImage(null);
         }
-      } catch (error) {
-        console.error('Error uploading image:', error);
+      } catch (err) {
+        console.error('Upload error:', err);
         setProfileImage(null);
       }
     }
 
     try {
-      const markPromptedResponse = await fetch(
+      const markRes = await fetch(
         `http://localhost:8080/api/users/${dashboardUser.username}/mark-prompted`,
         {
           method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      if (!markPromptedResponse.ok) {
-        const errText = await markPromptedResponse.text();
-        console.error(`Mark prompted failed with status ${markPromptedResponse.status}: ${errText}`);
+      if (!markRes.ok) {
+        console.error('Mark prompted failed:', await markRes.text());
       }
 
       const userData = JSON.parse(localStorage.getItem('habitAppUser') || '{}');
       userData.hasBeenPromptedForProfilePic = true;
       localStorage.setItem('habitAppUser', JSON.stringify(userData));
-    } catch (error) {
-      console.error('Error marking user as prompted:', error);
+    } catch (err) {
+      console.error('Mark prompted error:', err);
     }
 
     setShowProfilePrompt(false);
@@ -249,7 +227,7 @@ function App() {
   if (!isLoggedIn) {
     return (
       <div className="app-container">
-        <h1>My Habit Web App</h1>
+        <h1>Habit Forge</h1>
         <div className="form">
           <label>
             Username:
@@ -294,13 +272,7 @@ function App() {
           <button onClick={handleLogin}>Login</button>
 
           {message && (
-            <p
-              className={`message ${
-                message.toLowerCase().startsWith('error') || message.toLowerCase().includes('session expired')
-                  ? 'error'
-                  : 'success'
-              }`}
-            >
+            <p className={`message ${message.toLowerCase().includes('error') ? 'error' : 'success'}`}>
               {message}
             </p>
           )}
@@ -334,6 +306,7 @@ function App() {
 }
 
 export default App;
+
 
 
 

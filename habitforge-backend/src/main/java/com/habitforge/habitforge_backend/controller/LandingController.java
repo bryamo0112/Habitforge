@@ -8,7 +8,7 @@ public class LandingController {
 
     @GetMapping("/")
     public String home() {
-        return "My Habit Web App";
+        return "Habit Forge Backend is running!";
     }
 }
 

@@ -7,8 +7,10 @@
 .dashboard-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center; /* changed from flex-start */
   margin-bottom: 30px;
+  width: 100%;
+  flex-direction: row;
 }
 
 /* Left side buttons container */
@@ -17,7 +19,8 @@
   flex-direction: column;
   gap: 12px;
   align-items: flex-start;
-  margin-top: 120px; /* 👈 Adds space to push it below the greeting */
+  margin-top: 120px; 
+  width: 180px; 
 }
 
 /* Style for the three left buttons */
@@ -44,6 +47,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  min-width: 200px; /* ensure it takes some space on right */
 }
 
 /* Greeting text + profile pic */
@@ -78,6 +82,111 @@
 
 .logout-button:hover {
   background-color: #cc0000;
+}
+
+.habit-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.habit-form input {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 180px;
+  align-items: center;
+}
+
+.create-habit-button {
+  padding: 8px 15px; 
+  background-color: #3a86ff;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+  height: 39px;
+  margin-top: 7px; 
+}
+
+.create-habit-button:hover {
+  background-color: #265fcc;
+}
+
+.habit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.habit-card {
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 20px;
+  background-color: #f8f9ff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.habit-card h3 {
+  margin: 0 0 8px;
+  color: #222;
+}
+
+.habit-card p {
+  margin: 4px 0 12px;
+  font-weight: 500;
+}
+
+.progress-bar {
+  background-color: #e0e0e0;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #3a86ff;
+}
+
+.checkin-button {
+  padding: 8px 16px;
+  background-color: #00b894;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.checkin-button:hover {
+  background-color: #019874;
+}
+
+/* Logo section on the left side of the header */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 250px; /* prevent shrinking */
+}
+
+/* "Welcome to" text next to the logo */
+.welcome-text {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Logo image styling */
+.dashboard-logo {
+  height: 100px;
+  object-fit: contain;
 }
 
 
