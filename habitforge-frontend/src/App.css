@@ -60,12 +60,12 @@ button {
 }
 
 /* Login button */
-button:nth-of-type(2) {
+.login-button {
   background-color: #4caf50;
   color: white;
 }
 
-button:nth-of-type(2):hover {
+.login-button:hover {
   background-color: #45a049;
 }
 

@@ -20,6 +20,10 @@ public class Habit {
 
     private int currentStreak;
 
+    private LocalDate lastCheckInDate; // NEW FIELD
+
+    private boolean completed = false; // NEW FIELD
+
     @ElementCollection
     private Set<LocalDate> completedDays = new HashSet<>();
 
@@ -27,7 +31,11 @@ public class Habit {
     @JoinColumn(name = "user_id")
     private User user;
 
-    // Getters and setters
+    @OneToOne(mappedBy = "habit", cascade = CascadeType.ALL, orphanRemoval = true)
+    private HabitReminder reminder;
+
+    // --- Getters and Setters ---
+
     public Long getId() { return id; }
 
     public String getTitle() { return title; }
@@ -42,10 +50,26 @@ public class Habit {
     public int getCurrentStreak() { return currentStreak; }
     public void setCurrentStreak(int currentStreak) { this.currentStreak = currentStreak; }
 
+    public LocalDate getLastCheckInDate() { return lastCheckInDate; }
+    public void setLastCheckInDate(LocalDate lastCheckInDate) { this.lastCheckInDate = lastCheckInDate; }
+
+    public boolean isCompleted() { return completed; }
+    public void setCompleted(boolean completed) { this.completed = completed; }
+
     public Set<LocalDate> getCompletedDays() { return completedDays; }
     public void setCompletedDays(Set<LocalDate> completedDays) { this.completedDays = completedDays; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+
+    public HabitReminder getReminder() { return reminder; }
+    public void setReminder(HabitReminder reminder) { 
+        this.reminder = reminder;
+        if (reminder != null) {
+            reminder.setHabit(this); // maintain bidirectional consistency
+        }
+    }
 }
+
+
 

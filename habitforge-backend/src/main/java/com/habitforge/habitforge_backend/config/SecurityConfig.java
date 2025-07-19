@@ -38,9 +38,14 @@ public class SecurityConfig {
                 .requestMatchers("/", "/index.html").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/login").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/api/users/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/api/habits/**").permitAll()  // Allow OPTIONS for habits
                 .requestMatchers(HttpMethod.GET, "/api/users/*/profile-picture").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users/*/upload-profile-picture").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/users/*/mark-prompted").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/habits").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/habits/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/habits/**").authenticated()   // Allow PUT on habits (includes /edit)
+                .requestMatchers(HttpMethod.DELETE, "/api/habits/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -73,6 +78,8 @@ public class SecurityConfig {
         return source;
     }
 }
+
+
 
 
 

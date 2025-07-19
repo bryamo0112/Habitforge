@@ -269,7 +269,8 @@ function App() {
           <button className="signup-button" onClick={handleSignUp}>
             Sign Up
           </button>
-          <button onClick={handleLogin}>Login</button>
+          <button className="login-button" onClick={handleLogin}>Login</button>
+
 
           {message && (
             <p className={`message ${message.toLowerCase().includes('error') ? 'error' : 'success'}`}>

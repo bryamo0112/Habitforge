@@ -167,6 +167,19 @@
 .checkin-button:hover {
   background-color: #019874;
 }
+.delete-button {
+  padding: 8px 16px;
+  background-color: #00b894;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.delete-button:hover {
+  background-color: #019874;
+}
 
 /* Logo section on the left side of the header */
 .logo-container {
@@ -189,5 +202,119 @@
   object-fit: contain;
 }
 
+.habit-card-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px; /* space between check-in and delete buttons */
+}
+/* MODAL BACKDROP */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* MODAL CONTAINER */
+.modal {
+  background: white;
+  border-radius: 12px;
+  padding: 25px 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  position: relative;
+  animation: fadeInScale 0.3s ease forwards;
+}
+
+/* MODAL ANIMATION */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* MODAL HEADER */
+.modal-header {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+/* MODAL BODY */
+.modal-body {
+  font-size: 1rem;
+  margin-bottom: 25px;
+  color: #555;
+}
+
+/* MODAL FOOTER - BUTTONS CONTAINER */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* PRIMARY BUTTON (e.g. Confirm) */
+.modal-btn-primary {
+  padding: 10px 22px;
+  background-color: #3a86ff;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.25s ease;
+}
+
+.modal-btn-primary:hover {
+  background-color: #265fcc;
+}
+
+/* SECONDARY BUTTON (e.g. Cancel) */
+.modal-btn-secondary {
+  padding: 10px 22px;
+  background-color: #ccc;
+  border: none;
+  border-radius: 6px;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.25s ease;
+}
+
+.modal-btn-secondary:hover {
+  background-color: #aaa;
+}
+
+/* BUTTONS: Slight spacing & consistent style (for habit action buttons) */
+.checkin-button, .delete-button {
+  min-width: 110px;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  transition: background-color 0.2s ease;
+}
+
+/* Disabled check-in button */
+.checkin-button:disabled {
+  background-color: #b2dfdb;
+  cursor: not-allowed;
+  color: #555;
+}
 
 
