@@ -35,18 +35,30 @@ public class SecurityConfig {
             .formLogin(form -> form.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Public routes
                 .requestMatchers("/", "/index.html").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/login").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/api/users/**").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/api/habits/**").permitAll()  // Allow OPTIONS for habits
                 .requestMatchers(HttpMethod.GET, "/api/users/*/profile-picture").permitAll()
+
+                // Allow preflight CORS requests
+                .requestMatchers(HttpMethod.OPTIONS, "/api/users/**", "/api/habits/**").permitAll()
+
+                // Explicit matcher for edit
+                .requestMatchers(HttpMethod.PUT, "/api/habits/*/edit").authenticated()
+                .requestMatchers(HttpMethod.OPTIONS, "/api/habits/*/edit").permitAll()
+
+                // Authenticated user-specific routes
                 .requestMatchers(HttpMethod.POST, "/api/users/*/upload-profile-picture").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/users/*/mark-prompted").authenticated()
-                .requestMatchers(HttpMethod.GET, "/api/habits").authenticated()
+
+                // General habit routes (fallback)
+                .requestMatchers(HttpMethod.GET, "/api/habits/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/habits/**").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/habits/**").authenticated()   // Allow PUT on habits (includes /edit)
+                .requestMatchers(HttpMethod.PUT, "/api/habits/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/habits/**").authenticated()
-                .anyRequest().authenticated()
+
+                // Everything else denied
+                .anyRequest().denyAll()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -54,9 +66,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-        AuthenticationConfiguration config
-    ) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -78,17 +88,3 @@ public class SecurityConfig {
         return source;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

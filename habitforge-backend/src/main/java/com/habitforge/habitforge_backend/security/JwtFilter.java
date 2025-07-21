@@ -38,10 +38,10 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String path = request.getServletPath();
-        System.out.println("JwtFilter running on path: " + path);
+        System.out.println("[JwtFilter] Filtering path: " + path);
 
         final String authHeader = request.getHeader("Authorization");
-        System.out.println("Authorization header: " + authHeader);
+        System.out.println("[JwtFilter] Authorization header: " + authHeader);
 
         String jwt = null;
         String username = null;
@@ -50,27 +50,36 @@ public class JwtFilter extends OncePerRequestFilter {
             jwt = authHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwt);
+                System.out.println("[JwtFilter] Extracted username: " + username);
             } catch (ExpiredJwtException e) {
+                System.out.println("[JwtFilter] Token expired");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Token expired");
                 return;
             } catch (JwtException e) {
+                System.out.println("[JwtFilter] Invalid token: " + e.getMessage());
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Invalid token");
                 return;
             }
+        } else {
+            System.out.println("[JwtFilter] No Bearer token found");
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (jwtUtil.validateToken(jwt)) {
+            boolean valid = jwtUtil.validateToken(jwt);
+            System.out.println("[JwtFilter] Token valid: " + valid);
+
+            if (valid) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
-                            username,
-                            null,
-                            List.of(new SimpleGrantedAuthority("ROLE_USER"))  // add ROLE_USER
+                                username,
+                                null,
+                                List.of(new SimpleGrantedAuthority("ROLE_USER"))
                         );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                System.out.println("[JwtFilter] Authentication set in SecurityContext");
             }
         }
 
@@ -88,6 +97,7 @@ public class JwtFilter extends OncePerRequestFilter {
                path.equals("/index.html");
     }
 }
+
 
 
 

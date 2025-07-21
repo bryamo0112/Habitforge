@@ -20,28 +20,32 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        // Decode the base64 secret and initialize the signing key
         byte[] decodedKey = Base64.getDecoder().decode(secretKeyString);
         this.secretKey = Keys.hmacShaKeyFor(decodedKey);
+        System.out.println("[JwtUtil] Secret key initialized");
     }
 
     public String generateToken(String username) {
         long expirationMillis = 1000 * 60 * 60; // 1 hour
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
+        System.out.println("[JwtUtil] Token generated for user: " + username);
+        return token;
     }
 
     public String extractUsername(String token) {
-        return Jwts.parserBuilder()
+        String username = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+        System.out.println("[JwtUtil] Username extracted from token: " + username);
+        return username;
     }
 
     public boolean validateToken(String token) {
@@ -49,10 +53,12 @@ public class JwtUtil {
             Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
+            System.out.println("[JwtUtil] Token validation failed: " + e.getMessage());
             return false;
         }
     }
 }
+
 
 
 

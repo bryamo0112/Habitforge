@@ -1,5 +1,7 @@
 package com.habitforge.habitforge_backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -7,9 +9,15 @@ public class HabitDTO {
     private Long id;
     private String title;
     private int targetDays;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate startDate;
+
     private int currentStreak;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate lastCheckInDate;
+
     private boolean completed;
     private Set<LocalDate> completedDays;
 
@@ -53,5 +61,6 @@ public class HabitDTO {
     public Set<LocalDate> getCompletedDays() { return completedDays; }
     public void setCompletedDays(Set<LocalDate> completedDays) { this.completedDays = completedDays; }
 }
+
 
 

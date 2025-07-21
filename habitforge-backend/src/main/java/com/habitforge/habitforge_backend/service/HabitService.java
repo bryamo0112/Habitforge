@@ -106,17 +106,31 @@ public class HabitService {
         Habit habit = habitRepo.findById(dto.getHabitId()).orElse(null);
         if (habit == null || !habit.getUser().equals(user)) return false;
 
-        habit.setTitle(dto.getTitle().trim());
-        habit.setTargetDays(dto.getTargetDays());
+        // Defensive null checks and update only if present
+        if (dto.getTitle() != null) {
+            String trimmedTitle = dto.getTitle().trim();
+            if (!trimmedTitle.isEmpty()) {
+                habit.setTitle(trimmedTitle);
+            }
+        }
+
+        if (dto.getTargetDays() > 0) {
+            habit.setTargetDays(dto.getTargetDays());
+        }
+
+        // For boolean completed, always update (consider changing to Boolean if partial updates needed)
         habit.setCompleted(dto.isCompleted());
 
-        // Reminder logic
+        // Reminder logic: update or delete reminder if reminderTime present or empty
         String reminderStr = dto.getReminderTime();
-        if (reminderStr != null && !reminderStr.isBlank()) {
-            habitReminderService.createOrUpdateReminder(habit, reminderStr);
-        } else {
-            habitReminderService.deleteReminderIfExists(habit);
+        if (reminderStr != null) {
+            if (!reminderStr.isBlank()) {
+                habitReminderService.createOrUpdateReminder(habit, reminderStr);
+            } else {
+                habitReminderService.deleteReminderIfExists(habit);
+            }
         }
+        // If reminderStr == null, no change to reminder
 
         habitRepo.save(habit);
         return true;
@@ -195,6 +209,7 @@ public class HabitService {
         );
     }
 }
+
 
 
 
