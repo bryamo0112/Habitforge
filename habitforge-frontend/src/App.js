@@ -18,6 +18,16 @@ function App() {
   const [profileImage, setProfileImage] = useState(null);
   const [token, setToken] = useState(null);
 
+  // Email Verification UI state
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [email, setEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+
+  // Forgot Password UI state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -57,6 +67,12 @@ function App() {
     setUsername('');
     setPassword('');
     setToken(null);
+    setShowEmailVerification(false);
+    setShowForgotPassword(false);
+    setEmail('');
+    setVerificationCode('');
+    setResetCode('');
+    setNewPassword('');
 
     if (sessionExpired) {
       setMessage('Session expired. Please log in again.');
@@ -174,6 +190,98 @@ function App() {
     }
   };
 
+  // === New handler to send verification code (fixes unused warning) ===
+  const handleSendVerificationCode = async () => {
+    if (!email.trim()) {
+      setMessage('Error: Email is required to send verification code.');
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:8080/api/users/send-verification-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setMessage('Verification code sent to email.');
+      } else {
+        const errorText = await res.text();
+        setMessage(`Error sending code: ${errorText}`);
+      }
+    } catch (err) {
+      setMessage(`Error sending code: ${err.message}`);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!email.trim() || !verificationCode.trim()) {
+      setMessage('Email and verification code are required.');
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:8080/api/users/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code: verificationCode }),
+      });
+      if (res.ok) {
+        setMessage('Email verified successfully!');
+        setShowEmailVerification(false);
+        // Optionally, refresh user info or reload dashboard
+      } else {
+        const errorText = await res.text();
+        setMessage(`Verification failed: ${errorText}`);
+      }
+    } catch (err) {
+      setMessage(`Verification error: ${err.message}`);
+    }
+  };
+
+  const handleSendResetCode = async () => {
+    if (!email.trim()) {
+      setMessage('Error: Email is required to send reset code.');
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:8080/api/users/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setMessage('Password reset code sent to email.');
+      } else {
+        const errorText = await res.text();
+        setMessage(`Error sending reset code: ${errorText}`);
+      }
+    } catch (err) {
+      setMessage(`Error sending reset code: ${err.message}`);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email.trim() || !resetCode.trim() || !newPassword.trim()) {
+      setMessage('Email, reset code, and new password are required.');
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:8080/api/users/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code: resetCode, newPassword }),
+      });
+      if (res.ok) {
+        setMessage('Password updated successfully! You can now log in.');
+        setShowForgotPassword(false);
+      } else {
+        const errorText = await res.text();
+        setMessage(`Reset failed: ${errorText}`);
+      }
+    } catch (err) {
+      setMessage(`Reset error: ${err.message}`);
+    }
+  };
+
   const handleProfileChoice = async (choice, imageFile) => {
     if (choice && imageFile) {
       const formData = new FormData();
@@ -224,7 +332,10 @@ function App() {
     setShowDashboard(true);
   };
 
-  if (!isLoggedIn) {
+  // ======================== UI ========================
+
+  // Login / Signup Screen
+  if (!isLoggedIn && !showEmailVerification && !showForgotPassword) {
     return (
       <div className="app-container">
         <h1>Habit Forge</h1>
@@ -271,6 +382,16 @@ function App() {
           </button>
           <button className="login-button" onClick={handleLogin}>Login</button>
 
+          <button className="forgot-password-button" onClick={() => setShowForgotPassword(true)}>
+            Forgot Password?
+          </button>
+
+          <button className="verify-email-button" onClick={() => {
+            setShowEmailVerification(true);
+            setEmail(username);
+          }}>
+            Verify Email
+          </button>
 
           {message && (
             <p className={`message ${message.toLowerCase().includes('error') ? 'error' : 'success'}`}>
@@ -282,6 +403,82 @@ function App() {
     );
   }
 
+  // Email Verification UI
+  if (showEmailVerification) {
+    return (
+      <div className="app-container">
+        <h1>Email Verification</h1>
+        <p>Please check your email and enter the verification code:</p>
+        <label>
+          Email:
+          <input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled
+          />
+        </label>
+        <button onClick={handleSendVerificationCode}>Send Verification Code</button> {/* Added this button */}
+        <label>
+          Verification Code:
+          <input
+            type="text"
+            placeholder="Enter code"
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value)}
+          />
+        </label>
+        <button onClick={handleVerifyCode}>Verify</button>
+        <button onClick={() => setShowEmailVerification(false)}>Back to Login</button>
+
+        {message && <p className={`message ${message.toLowerCase().includes('error') ? 'error' : 'success'}`}>{message}</p>}
+      </div>
+    );
+  }
+
+  // Forgot Password UI
+  if (showForgotPassword) {
+    return (
+      <div className="app-container">
+        <h1>Forgot Password</h1>
+        <label>
+          Email:
+          <input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </label>
+        <button onClick={handleSendResetCode}>Send Reset Code</button>
+        <label>
+          Reset Code:
+          <input
+            type="text"
+            placeholder="Enter reset code"
+            value={resetCode}
+            onChange={(e) => setResetCode(e.target.value)}
+          />
+        </label>
+        <label>
+          New Password:
+          <input
+            type="password"
+            placeholder="Enter new password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+        </label>
+        <button onClick={handleResetPassword}>Reset Password</button>
+        <button onClick={() => setShowForgotPassword(false)}>Back to Login</button>
+
+        {message && <p className={`message ${message.toLowerCase().includes('error') ? 'error' : 'success'}`}>{message}</p>}
+      </div>
+    );
+  }
+
+  // Profile Picture Prompt UI
   if (showProfilePrompt) {
     return (
       <div className="app-container">
@@ -293,6 +490,7 @@ function App() {
     );
   }
 
+  // Dashboard UI
   if (showDashboard) {
     return (
       <Dashboard
@@ -307,6 +505,8 @@ function App() {
 }
 
 export default App;
+
+
 
 
 

@@ -3,7 +3,6 @@ import defaultProfile from './assets/profiledef.jpg';
 import logo from './assets/HabitForgeLogo.png';
 import './Dashboard.css';
 
-// Simple confetti animation function (placeholder)
 function triggerConfetti() {
   alert('🎉 Congrats on completing your habit! 🎉');
 }
@@ -13,13 +12,16 @@ function Dashboard({ username, profileImage, onLogout }) {
   const [newHabitTitle, setNewHabitTitle] = useState('');
   const [newHabitTargetDays, setNewHabitTargetDays] = useState('');
   const [sortBy, setSortBy] = useState('startdate');
-  const [filterByStatus, setFilterByStatus] = useState('all'); // all, active, completed
+  const [filterByStatus, setFilterByStatus] = useState('all');
   const [editHabit, setEditHabit] = useState(null);
   const [reminderTimes, setReminderTimes] = useState({});
   const [confirmDeleteHabitId, setConfirmDeleteHabitId] = useState(null);
+  const [showPicModal, setShowPicModal] = useState(false);
+  const [newProfilePic, setNewProfilePic] = useState(null);
+  const [timeLeftByHabit, setTimeLeftByHabit] = useState({}); // New: countdown strings per habit
+
   const token = localStorage.getItem('jwtToken');
 
-  // Fetch habits with sorting parameter
   const fetchHabits = useCallback(async () => {
     try {
       const url = new URL('http://localhost:8080/api/habits/sorted');
@@ -32,14 +34,12 @@ function Dashboard({ username, profileImage, onLogout }) {
         const data = await res.json();
         setHabits(data);
 
-        // Initialize reminder times
         const times = {};
         data.forEach(habit => {
           if (habit.reminderTime) times[habit.id] = habit.reminderTime;
         });
         setReminderTimes(times);
 
-        // Simple welcome back alert every 24h
         const lastLogin = localStorage.getItem('lastLoginTime');
         const now = Date.now();
         if (!lastLogin || now - lastLogin > 24 * 3600 * 1000) {
@@ -58,16 +58,60 @@ function Dashboard({ username, profileImage, onLogout }) {
     fetchHabits();
   }, [fetchHabits]);
 
-  // Filter habits client-side
+  // Update countdown timers every second
+  useEffect(() => {
+    function getTimeLeftString(reminderTimeStr) {
+      if (!reminderTimeStr) return null;
+
+      const [hourStr, minuteStr] = reminderTimeStr.split(':');
+      if (hourStr == null || minuteStr == null) return null;
+
+      const now = new Date();
+      const reminder = new Date();
+      reminder.setHours(parseInt(hourStr, 10));
+      reminder.setMinutes(parseInt(minuteStr, 10));
+      reminder.setSeconds(0);
+      reminder.setMilliseconds(0);
+
+      // If reminder passed for today, shift to tomorrow
+      if (reminder <= now) {
+        reminder.setDate(reminder.getDate() + 1);
+      }
+
+      const diffMs = reminder - now;
+      const diffSeconds = Math.floor(diffMs / 1000);
+      const hours = Math.floor(diffSeconds / 3600);
+      const minutes = Math.floor((diffSeconds % 3600) / 60);
+      const seconds = diffSeconds % 60;
+
+      const hStr = String(hours).padStart(2, '0');
+      const mStr = String(minutes).padStart(2, '0');
+      const sStr = String(seconds).padStart(2, '0');
+
+      return `${hStr}h ${mStr}m ${sStr}s until reminder`;
+    }
+
+    function updateTimeLeft() {
+      const newTimeLeft = {};
+      for (const [habitId, timeStr] of Object.entries(reminderTimes)) {
+        newTimeLeft[habitId] = getTimeLeftString(timeStr);
+      }
+      setTimeLeftByHabit(newTimeLeft);
+    }
+
+    updateTimeLeft();
+    const intervalId = setInterval(updateTimeLeft, 1000);
+    return () => clearInterval(intervalId);
+  }, [reminderTimes]);
+
   const filteredHabits = habits.filter(habit => {
     if (filterByStatus === 'active') return !habit.completed;
     if (filterByStatus === 'completed') return habit.completed;
     return true;
   });
 
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const today = new Date().toISOString().split('T')[0];
 
-  // Handle check-in API call
   const handleCheckIn = async habitId => {
     try {
       const res = await fetch(`http://localhost:8080/api/habits/${habitId}/check-in`, {
@@ -76,7 +120,6 @@ function Dashboard({ username, profileImage, onLogout }) {
       });
       if (res.ok) {
         await fetchHabits();
-
         const habit = habits.find(h => h.id === habitId);
         if (habit && habit.currentStreak + 1 >= habit.targetDays) {
           triggerConfetti();
@@ -89,7 +132,6 @@ function Dashboard({ username, profileImage, onLogout }) {
     }
   };
 
-  // Handle habit deletion
   const handleDeleteHabit = async habitId => {
     try {
       const res = await fetch(`http://localhost:8080/api/habits/${habitId}`, {
@@ -107,11 +149,9 @@ function Dashboard({ username, profileImage, onLogout }) {
     }
   };
 
-  // Create a new habit
   const handleCreateHabit = async () => {
     const title = newHabitTitle.trim();
     const days = parseInt(newHabitTargetDays, 10);
-
     if (!title || isNaN(days) || days <= 0) {
       alert('Please enter a valid title and target days.');
       return;
@@ -139,7 +179,6 @@ function Dashboard({ username, profileImage, onLogout }) {
     }
   };
 
-  // Open edit modal and preload reminder time
   const openEditModal = habit => {
     setEditHabit({
       ...habit,
@@ -147,12 +186,10 @@ function Dashboard({ username, profileImage, onLogout }) {
     });
   };
 
-  // Handle changes in edit modal
   const handleEditChange = (field, value) => {
     setEditHabit(prev => ({ ...prev, [field]: value }));
   };
 
-  // Submit habit edits to backend
   const submitEditHabit = async () => {
     if (!editHabit.title.trim()) {
       alert('Title cannot be empty.');
@@ -189,20 +226,13 @@ function Dashboard({ username, profileImage, onLogout }) {
     }
   };
 
-  // Toggle daily reminder checkbox
   const toggleReminder = habitId => {
     const current = reminderTimes[habitId] || '';
-    if (current) {
-      setReminderTimes(prev => ({ ...prev, [habitId]: '' }));
-      updateReminder(habitId, '');
-    } else {
-      const defaultTime = '08:00';
-      setReminderTimes(prev => ({ ...prev, [habitId]: defaultTime }));
-      updateReminder(habitId, defaultTime);
-    }
+    const newTime = current ? '' : '08:00';
+    setReminderTimes(prev => ({ ...prev, [habitId]: newTime }));
+    updateReminder(habitId, newTime);
   };
 
-  // Update reminder on server
   const updateReminder = async (habitId, timeStr) => {
     try {
       const res = await fetch(`http://localhost:8080/api/habits/${habitId}/edit`, {
@@ -223,14 +253,43 @@ function Dashboard({ username, profileImage, onLogout }) {
     }
   };
 
-  // Format date helper
-  const formatDate = dateStr => {
-    return new Date(dateStr).toLocaleDateString(undefined, {
+  const handleProfilePicUpload = async () => {
+    if (!newProfilePic) {
+      alert('Please select an image.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', newProfilePic);
+
+    try {
+      const res = await fetch(`http://localhost:8080/api/users/uploadProfilePic`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const { profilePicUrl } = await res.json();
+        localStorage.setItem('profileImage', profilePicUrl);
+        setShowPicModal(false);
+        window.location.reload();
+      } else {
+        alert('Failed to upload image.');
+      }
+    } catch (err) {
+      console.error('Error uploading profile picture:', err);
+    }
+  };
+
+  const formatDate = dateStr =>
+    new Date(dateStr).toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
-  };
 
   return (
     <div className="dashboard-container">
@@ -247,6 +306,8 @@ function Dashboard({ username, profileImage, onLogout }) {
               src={profileImage || defaultProfile}
               alt="Profile"
               className="dashboard-profile-pic"
+              onClick={() => setShowPicModal(true)}
+              style={{ cursor: 'pointer' }}
             />
           </div>
           <button className="logout-button" onClick={onLogout}>
@@ -325,7 +386,6 @@ function Dashboard({ username, profileImage, onLogout }) {
                     Last Check-In: {lastCheckInDate ? formatDate(lastCheckInDate) : 'Not yet'}
                   </p>
 
-                  {/* Reminder toggle */}
                   <label className="reminder-toggle">
                     <input
                       type="checkbox"
@@ -336,7 +396,13 @@ function Dashboard({ username, profileImage, onLogout }) {
                     Remind me daily
                   </label>
 
-                  {/* Edit & Delete Buttons */}
+                  {/* Countdown timer display */}
+                  {reminderTimes[habit.id] && !habit.completed && (
+                    <p className="reminder-countdown" style={{ fontStyle: 'italic', fontSize: '0.9em' }}>
+                      {timeLeftByHabit[habit.id]}
+                    </p>
+                  )}
+
                   <div className="habit-card-buttons">
                     <button
                       className="checkin-button"
@@ -352,7 +418,10 @@ function Dashboard({ username, profileImage, onLogout }) {
                     <button className="edit-button" onClick={() => openEditModal(habit)}>
                       Edit
                     </button>
-                    <button className="delete-button" onClick={() => setConfirmDeleteHabitId(habit.id)}>
+                    <button
+                      className="delete-button"
+                      onClick={() => setConfirmDeleteHabitId(habit.id)}
+                    >
                       Delete
                     </button>
                   </div>
@@ -363,7 +432,6 @@ function Dashboard({ username, profileImage, onLogout }) {
         </section>
       </main>
 
-      {/* Edit Habit Modal */}
       {editHabit && (
         <div className="modal-overlay" onClick={() => setEditHabit(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -410,7 +478,6 @@ function Dashboard({ username, profileImage, onLogout }) {
         </div>
       )}
 
-      {/* Confirm Delete Modal */}
       {confirmDeleteHabitId && (
         <div className="modal-overlay" onClick={() => setConfirmDeleteHabitId(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -422,11 +489,37 @@ function Dashboard({ username, profileImage, onLogout }) {
           </div>
         </div>
       )}
+
+      {showPicModal && (
+        <div className="modal-overlay" onClick={() => setShowPicModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <h3>Update Profile Picture</h3>
+            {newProfilePic && (
+              <img
+                src={URL.createObjectURL(newProfilePic)}
+                alt="Preview"
+                style={{ width: '120px', height: '120px', borderRadius: '50%', marginBottom: '10px' }}
+              />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => setNewProfilePic(e.target.files?.[0] || null)}
+            />
+            <div className="modal-buttons">
+              <button onClick={handleProfilePicUpload}>Upload</button>
+              <button onClick={() => setShowPicModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default Dashboard;
+
+
 
 
 

@@ -11,7 +11,7 @@ public class HabitReminder {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "habit_id", nullable = false)
+    @JoinColumn(name = "habit_id", nullable = false, unique = true)
     private Habit habit;
 
     private LocalTime reminderTime; // E.g., 08:00 AM
@@ -55,4 +55,5 @@ public class HabitReminder {
         this.enabled = enabled;
     }
 }
+
 

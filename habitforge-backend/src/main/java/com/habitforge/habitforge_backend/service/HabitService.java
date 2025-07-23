@@ -30,7 +30,7 @@ public class HabitService {
     }
 
     public HabitDTO createHabit(String username, String title, int targetDays) {
-        User user = userRepo.findByUsername(username.trim());
+        User user = userRepo.findByUsername(username.trim()).orElse(null);
         if (user == null) return null;
 
         Habit habit = new Habit();
@@ -46,7 +46,7 @@ public class HabitService {
     }
 
     public List<HabitDTO> getUserHabits(String username) {
-        User user = userRepo.findByUsername(username.trim());
+        User user = userRepo.findByUsername(username.trim()).orElse(null);
         if (user == null) return List.of();
 
         return habitRepo.findByUser(user).stream()
@@ -55,7 +55,7 @@ public class HabitService {
     }
 
     public boolean checkInHabit(String username, Long habitId) {
-        User user = userRepo.findByUsername(username.trim());
+        User user = userRepo.findByUsername(username.trim()).orElse(null);
         if (user == null) return false;
 
         Habit habit = habitRepo.findById(habitId).orElse(null);
@@ -87,7 +87,7 @@ public class HabitService {
     }
 
     public boolean deleteHabit(String username, Long habitId) {
-        User user = userRepo.findByUsername(username.trim());
+        User user = userRepo.findByUsername(username.trim()).orElse(null);
         if (user == null) return false;
 
         Habit habit = habitRepo.findById(habitId).orElse(null);
@@ -100,7 +100,7 @@ public class HabitService {
 
     // ------------------ Edit Habit ------------------
     public boolean editHabit(String username, HabitEditDTO dto) {
-        User user = userRepo.findByUsername(username.trim());
+        User user = userRepo.findByUsername(username.trim()).orElse(null);
         if (user == null) return false;
 
         Habit habit = habitRepo.findById(dto.getHabitId()).orElse(null);
@@ -144,7 +144,7 @@ public class HabitService {
 
     // ------------------ Sorting Support ------------------
     public List<HabitDTO> getUserHabitsSorted(String username, String sortBy) {
-        User user = userRepo.findByUsername(username.trim());
+        User user = userRepo.findByUsername(username.trim()).orElse(null);
         if (user == null) return List.of();
 
         List<Habit> habits = habitRepo.findByUser(user);
@@ -180,7 +180,7 @@ public class HabitService {
 
     // ------------------ Reminder Support ------------------
     public boolean setHabitReminder(String username, Long habitId, String timeStr) {
-        User user = userRepo.findByUsername(username.trim());
+        User user = userRepo.findByUsername(username.trim()).orElse(null);
         if (user == null) return false;
 
         Habit habit = habitRepo.findById(habitId).orElse(null);
@@ -209,6 +209,7 @@ public class HabitService {
         );
     }
 }
+
 
 
 
