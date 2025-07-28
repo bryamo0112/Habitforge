@@ -20,44 +20,112 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        byte[] decodedKey = Base64.getDecoder().decode(secretKeyString);
-        this.secretKey = Keys.hmacShaKeyFor(decodedKey);
-        System.out.println("[JwtUtil] Secret key initialized");
+        try {
+            byte[] decodedKey = Base64.getDecoder().decode(secretKeyString);
+            this.secretKey = Keys.hmacShaKeyFor(decodedKey);
+            System.out.println("[JwtUtil] Secret key initialized");
+        } catch (Exception e) {
+            System.out.println("[JwtUtil] Failed to initialize secret key: " + e.getMessage());
+        }
     }
 
-    public String generateToken(String username) {
+    // Generate token with optional email
+    public String generateToken(String username, String email) {
         long expirationMillis = 1000 * 60 * 60; // 1 hour
-        String token = Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
-                .compact();
-        System.out.println("[JwtUtil] Token generated for user: " + username);
-        return token;
+        try {
+            return Jwts.builder()
+                    .setSubject(username)
+                    .claim("email", email)
+                    .setIssuedAt(new Date())
+                    .setExpiration(new Date(System.currentTimeMillis() + expirationMillis))
+                    .signWith(secretKey, SignatureAlgorithm.HS256)
+                    .compact();
+        } catch (Exception e) {
+            System.out.println("[JwtUtil] Failed to generate token: " + e.getMessage());
+            return null;
+        }
     }
 
+    // Overload without email
+    public String generateToken(String username) {
+        return generateToken(username, null);
+    }
+
+    // Extract username from JWT
     public String extractUsername(String token) {
-        String username = Jwts.parserBuilder()
+        try {
+            return getAllClaims(token).getSubject();
+        } catch (JwtException e) {
+            System.out.println("[JwtUtil] Failed to extract username: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // Extract email if present
+    public String extractEmail(String token) {
+        try {
+            return getAllClaims(token).get("email", String.class);
+        } catch (Exception e) {
+            System.out.println("[JwtUtil] Failed to extract email: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // Extract username from Authorization header
+    public String extractUsernameFromHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("[JwtUtil] Missing or invalid Authorization header.");
+            return null;
+        }
+
+        String token = authHeader.substring(7);
+        return extractUsername(token);
+    }
+
+    // Validate token integrity and expiration
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            System.out.println("[JwtUtil] Token expired: " + e.getMessage());
+        } catch (JwtException e) {
+            System.out.println("[JwtUtil] Invalid JWT: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("[JwtUtil] Token is null or empty: " + e.getMessage());
+        }
+        return false;
+    }
+
+    // Private: Extract all claims (subject, email, expiration, etc.)
+    private Claims getAllClaims(String token) {
+        return Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
-        System.out.println("[JwtUtil] Username extracted from token: " + username);
-        return username;
+                .getBody();
     }
 
-    public boolean validateToken(String token) {
+    // Debug utility
+    public void printDecodedToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            System.out.println("[JwtUtil] Token validation failed: " + e.getMessage());
-            return false;
+            Claims claims = getAllClaims(token);
+            System.out.println("[JwtUtil] Decoded token claims:");
+            System.out.println("  Subject (username): " + claims.getSubject());
+            System.out.println("  Email: " + claims.get("email"));
+            System.out.println("  Expiration: " + claims.getExpiration());
+        } catch (Exception e) {
+            System.out.println("[JwtUtil] Token decode failed: " + e.getMessage());
         }
     }
 }
+
+
+
+
 
 
 

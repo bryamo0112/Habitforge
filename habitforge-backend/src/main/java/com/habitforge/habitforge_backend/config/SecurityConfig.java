@@ -35,29 +35,27 @@ public class SecurityConfig {
             .formLogin(form -> form.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public routes
                 .requestMatchers("/", "/index.html").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/users/signup", "/api/users/login").permitAll()
+
+                .requestMatchers(HttpMethod.POST,
+                    "/api/users/login",
+                    "/api/users/signup",
+                    "/api/users/send-verification-code",
+                    "/api/users/verify-code",
+                    "/api/users/set-email",
+                    "/api/users/forgot-password",
+                    "/api/users/reset-password"
+                ).permitAll()
+
                 .requestMatchers(HttpMethod.GET, "/api/users/*/profile-picture").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Allow preflight CORS requests
-                .requestMatchers(HttpMethod.OPTIONS, "/api/users/**", "/api/habits/**").permitAll()
-
-                // Explicit matcher for edit
-                .requestMatchers(HttpMethod.PUT, "/api/habits/*/edit").authenticated()
-                .requestMatchers(HttpMethod.OPTIONS, "/api/habits/*/edit").permitAll()
-
-                // Authenticated user-specific routes
+                .requestMatchers(HttpMethod.GET, "/api/users/current").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/users/set-username").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/users/*/upload-profile-picture").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/users/*/mark-prompted").authenticated()
+                .requestMatchers("/api/habits/**").authenticated()
 
-                // General habit routes (fallback)
-                .requestMatchers(HttpMethod.GET, "/api/habits/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/habits/**").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/habits/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/habits/**").authenticated()
-
-                // Everything else denied
                 .anyRequest().denyAll()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -78,9 +76,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+
+        // ✅ Allow local frontend dev on any port
+        config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
+
+        // ✅ Standard methods
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // ✅ Required headers
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        // ✅ Expose Authorization so client can read headers if needed
+        config.setExposedHeaders(List.of("Authorization"));
+
+        // ✅ Important for cookies/auth headers
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -88,3 +97,8 @@ public class SecurityConfig {
         return source;
     }
 }
+
+
+
+
+

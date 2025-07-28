@@ -1,6 +1,5 @@
 package com.habitforge.habitforge_backend.service;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -30,7 +29,7 @@ public class EmailService {
         sendVerificationEmail(email, code);
     }
 
-    // Verify the code matches for given email
+    // Verify the code matches for given email (email verification / login)
     public boolean verifyCode(String email, String code) {
         return userService.verifyEmailCode(email, code);
     }
@@ -46,6 +45,22 @@ public class EmailService {
                 """, code);
 
         sendHtmlEmail(to, subject, content);
+    }
+
+    // --- NEW: Send password reset code ---
+    public void sendPasswordResetCode(String email) {
+        String code = generateCode();
+        // Save the code in resetPasswordCode field of User via UserService
+        boolean saved = userService.generateAndSendPasswordResetCode(email, code);
+        if (!saved) {
+            throw new RuntimeException("Failed to save password reset code for " + email);
+        }
+        sendPasswordResetEmail(email, code);
+    }
+
+    // --- NEW: Verify password reset code ---
+    public boolean verifyPasswordResetCode(String email, String code) {
+        return userService.verifyResetCode(email, code);
     }
 
     // Send password reset email
@@ -80,11 +95,12 @@ public class EmailService {
     }
 
     // Simple code generator (6 digit numeric code)
-    private String generateCode() {
+    public String generateCode() {
         int code = (int)(Math.random() * 900000) + 100000;
         return String.valueOf(code);
     }
 }
+
 
 
 

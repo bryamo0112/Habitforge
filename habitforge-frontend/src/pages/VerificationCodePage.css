@@ -1,0 +1,46 @@
+.verification-container {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 30px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #fafafa;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.verification-container h2 {
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.verification-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 12px 0;
+  font-size: 16px;
+  border: 1px solid #999;
+  border-radius: 5px;
+}
+
+.verification-container button {
+  width: 100%;
+  padding: 12px;
+  background-color: #3b82f6;
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.verification-container button:hover {
+  background-color: #2563eb;
+}
+
+.error-message {
+  color: #dc2626;
+  margin-top: 10px;
+  font-size: 14px;
+}

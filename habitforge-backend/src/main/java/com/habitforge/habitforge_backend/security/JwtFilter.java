@@ -16,11 +16,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private static final Logger LOGGER = Logger.getLogger(JwtFilter.class.getName());
 
     public JwtFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
@@ -32,71 +34,85 @@ public class JwtFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
+        String method = request.getMethod();
+        LOGGER.info("🔐 JwtFilter: " + method + " " + path);
+
         if (shouldNotFilter(request)) {
+            LOGGER.info("✅ Public endpoint, skipping filter");
             filterChain.doFilter(request, response);
             return;
         }
 
-        String path = request.getServletPath();
-        System.out.println("[JwtFilter] Filtering path: " + path);
-
         final String authHeader = request.getHeader("Authorization");
-        System.out.println("[JwtFilter] Authorization header: " + authHeader);
-
-        String jwt = null;
-        String username = null;
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwt = authHeader.substring(7);
+            String jwt = authHeader.substring(7);
             try {
-                username = jwtUtil.extractUsername(jwt);
-                System.out.println("[JwtFilter] Extracted username: " + username);
+                String username = jwtUtil.extractUsername(jwt);
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    if (jwtUtil.validateToken(jwt)) {
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(
+                                        username,
+                                        null,
+                                        List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                                );
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                        LOGGER.info("✅ Authenticated user: " + username);
+                    } else {
+                        LOGGER.warning("❌ Invalid token");
+                    }
+                }
             } catch (ExpiredJwtException e) {
-                System.out.println("[JwtFilter] Token expired");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Token expired");
-                return;
+                LOGGER.warning("⏰ Token expired");
             } catch (JwtException e) {
-                System.out.println("[JwtFilter] Invalid token: " + e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid token");
-                return;
+                LOGGER.warning("❌ Invalid token format: " + e.getMessage());
             }
         } else {
-            System.out.println("[JwtFilter] No Bearer token found");
-        }
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            boolean valid = jwtUtil.validateToken(jwt);
-            System.out.println("[JwtFilter] Token valid: " + valid);
-
-            if (valid) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                username,
-                                null,
-                                List.of(new SimpleGrantedAuthority("ROLE_USER"))
-                        );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                System.out.println("[JwtFilter] Authentication set in SecurityContext");
-            }
+            LOGGER.warning("⚠️ No token provided or malformed header");
         }
 
         filterChain.doFilter(request, response);
     }
 
     @Override
-    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         String path = request.getServletPath().replaceAll("/+$", "");
 
-        return path.equals("/api/users/login") ||
+        return path.equals("/") ||
+               path.equals("/favicon.ico") ||
+               path.equals("/index.html") ||
+               path.startsWith("/static/") ||
+               path.startsWith("/public/") ||
+
+               // Public auth & verification endpoints
+               path.equals("/api/users/login") ||
                path.equals("/api/users/signup") ||
+               path.equals("/api/users/send-verification-code") ||
+               path.equals("/api/users/verify-login-code") ||
+               path.equals("/api/users/verify-code") ||
+               path.equals("/api/users/set-email") ||  
+               path.equals("/api/users/forgot-password") ||
+               path.equals("/api/users/reset-password") ||
+
+               // Public profile picture endpoint
                path.matches("^/api/users/[^/]+/profile-picture$") ||
-               path.equals("/") ||
-               path.equals("/index.html");
+
+               // Allow CORS preflight requests
+               request.getMethod().equalsIgnoreCase("OPTIONS");
     }
 }
+
+
+
+
+
+
+
+
+
 
 
 

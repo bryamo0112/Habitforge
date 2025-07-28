@@ -68,6 +68,7 @@ public class HabitService {
             return false;
         }
 
+        // Add today's date to completed days
         habit.getCompletedDays().add(today);
 
         LocalDate yesterday = today.minusDays(1);
@@ -81,6 +82,8 @@ public class HabitService {
         if (newStreak >= habit.getTargetDays()) {
             habit.setCompleted(true);
         }
+
+        // *** Note: Do NOT reset or update reminder here! Preserve existing reminderTime ***
 
         habitRepo.save(habit);
         return true;
@@ -209,6 +212,7 @@ public class HabitService {
         );
     }
 }
+
 
 
 

@@ -2,12 +2,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import defaultProfile from './assets/profiledef.jpg';
 import logo from './assets/HabitForgeLogo.png';
 import './Dashboard.css';
-
 function triggerConfetti() {
   alert('🎉 Congrats on completing your habit! 🎉');
 }
 
-function Dashboard({ username, profileImage, onLogout }) {
+function Dashboard({ user, setUser, onLogout }) {
   const [habits, setHabits] = useState([]);
   const [newHabitTitle, setNewHabitTitle] = useState('');
   const [newHabitTargetDays, setNewHabitTargetDays] = useState('');
@@ -18,13 +17,13 @@ function Dashboard({ username, profileImage, onLogout }) {
   const [confirmDeleteHabitId, setConfirmDeleteHabitId] = useState(null);
   const [showPicModal, setShowPicModal] = useState(false);
   const [newProfilePic, setNewProfilePic] = useState(null);
-  const [timeLeftByHabit, setTimeLeftByHabit] = useState({}); // New: countdown strings per habit
+  const [timeLeftByHabit, setTimeLeftByHabit] = useState({});
 
-  const token = localStorage.getItem('jwtToken');
+  const token = localStorage.getItem('token');
 
   const fetchHabits = useCallback(async () => {
     try {
-      const url = new URL('http://localhost:8080/api/habits/sorted');
+      const url = new URL('/api/habits/sorted', window.location.origin);
       url.searchParams.append('sortBy', sortBy);
 
       const res = await fetch(url.toString(), {
@@ -58,7 +57,6 @@ function Dashboard({ username, profileImage, onLogout }) {
     fetchHabits();
   }, [fetchHabits]);
 
-  // Update countdown timers every second
   useEffect(() => {
     function getTimeLeftString(reminderTimeStr) {
       if (!reminderTimeStr) return null;
@@ -73,7 +71,6 @@ function Dashboard({ username, profileImage, onLogout }) {
       reminder.setSeconds(0);
       reminder.setMilliseconds(0);
 
-      // If reminder passed for today, shift to tomorrow
       if (reminder <= now) {
         reminder.setDate(reminder.getDate() + 1);
       }
@@ -84,11 +81,7 @@ function Dashboard({ username, profileImage, onLogout }) {
       const minutes = Math.floor((diffSeconds % 3600) / 60);
       const seconds = diffSeconds % 60;
 
-      const hStr = String(hours).padStart(2, '0');
-      const mStr = String(minutes).padStart(2, '0');
-      const sStr = String(seconds).padStart(2, '0');
-
-      return `${hStr}h ${mStr}m ${sStr}s until reminder`;
+      return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s until reminder`;
     }
 
     function updateTimeLeft() {
@@ -114,7 +107,7 @@ function Dashboard({ username, profileImage, onLogout }) {
 
   const handleCheckIn = async habitId => {
     try {
-      const res = await fetch(`http://localhost:8080/api/habits/${habitId}/check-in`, {
+      const res = await fetch(`/api/habits/${habitId}/check-in`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -131,10 +124,13 @@ function Dashboard({ username, profileImage, onLogout }) {
       console.error('Error checking in:', err);
     }
   };
+ const handleLogoutClick = () => {
+    if (onLogout) onLogout();
+  };
 
   const handleDeleteHabit = async habitId => {
     try {
-      const res = await fetch(`http://localhost:8080/api/habits/${habitId}`, {
+      const res = await fetch(`/api/habits/${habitId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -158,7 +154,7 @@ function Dashboard({ username, profileImage, onLogout }) {
     }
 
     try {
-      const res = await fetch('http://localhost:8080/api/habits/create', {
+      const res = await fetch('/api/habits/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -201,7 +197,7 @@ function Dashboard({ username, profileImage, onLogout }) {
     }
 
     try {
-      const res = await fetch(`http://localhost:8080/api/habits/${editHabit.id}/edit`, {
+      const res = await fetch(`/api/habits/${editHabit.id}/edit`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -235,7 +231,7 @@ function Dashboard({ username, profileImage, onLogout }) {
 
   const updateReminder = async (habitId, timeStr) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/habits/${habitId}/edit`, {
+      const res = await fetch(`/api/habits/${habitId}/edit`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -263,19 +259,20 @@ function Dashboard({ username, profileImage, onLogout }) {
     formData.append('image', newProfilePic);
 
     try {
-      const res = await fetch(`http://localhost:8080/api/users/uploadProfilePic`, {
+      const res = await fetch(`/api/users/${user.username}/upload-profile-picture`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: formData,
       });
 
       if (res.ok) {
-        const { profilePicUrl } = await res.json();
-        localStorage.setItem('profileImage', profilePicUrl);
+        const updatedUser = await res.json();
+        console.log("Updated user after upload:", updatedUser);
+        setUser(updatedUser);
         setShowPicModal(false);
-        window.location.reload();
+        setNewProfilePic(null);
       } else {
         alert('Failed to upload image.');
       }
@@ -301,18 +298,23 @@ function Dashboard({ username, profileImage, onLogout }) {
 
         <div className="greeting-container">
           <div className="greeting">
-            Hello, {username}
+            {user?.username?.trim() ? `Hello, ${user.username}` : 'Hello!'}
             <img
-              src={profileImage || defaultProfile}
+              src={
+    user?.profilePicUrl
+    ? user.profilePicUrl
+    : defaultProfile
+  }
               alt="Profile"
               className="dashboard-profile-pic"
               onClick={() => setShowPicModal(true)}
               style={{ cursor: 'pointer' }}
             />
           </div>
-          <button className="logout-button" onClick={onLogout}>
-            Logout
-          </button>
+          <button className="logout-button" onClick={handleLogoutClick}>
+  Logout
+</button>
+
         </div>
       </header>
 
@@ -396,7 +398,6 @@ function Dashboard({ username, profileImage, onLogout }) {
                     Remind me daily
                   </label>
 
-                  {/* Countdown timer display */}
                   {reminderTimes[habit.id] && !habit.completed && (
                     <p className="reminder-countdown" style={{ fontStyle: 'italic', fontSize: '0.9em' }}>
                       {timeLeftByHabit[habit.id]}
@@ -507,7 +508,9 @@ function Dashboard({ username, profileImage, onLogout }) {
               onChange={e => setNewProfilePic(e.target.files?.[0] || null)}
             />
             <div className="modal-buttons">
-              <button onClick={handleProfilePicUpload}>Upload</button>
+              <button onClick={handleProfilePicUpload} disabled={!newProfilePic}>
+                Upload
+              </button>
               <button onClick={() => setShowPicModal(false)}>Cancel</button>
             </div>
           </div>
@@ -518,25 +521,3 @@ function Dashboard({ username, profileImage, onLogout }) {
 }
 
 export default Dashboard;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

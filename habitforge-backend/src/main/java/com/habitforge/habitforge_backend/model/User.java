@@ -13,7 +13,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = true) // <-- allow null for email-only users
     private String password;
 
     @Column(unique = true)
@@ -46,6 +46,10 @@ public class User {
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+    }
+
+    public User(String email) {
+        this.email = email;
     }
 
     // Getters & Setters
@@ -83,6 +87,7 @@ public class User {
         this.hasBeenPromptedForProfilePic = hasBeenPromptedForProfilePic;
     }
 }
+
 
 
 
