@@ -18,40 +18,46 @@ function Dashboard({ user, setUser, onLogout }) {
   const [showPicModal, setShowPicModal] = useState(false);
   const [newProfilePic, setNewProfilePic] = useState(null);
   const [timeLeftByHabit, setTimeLeftByHabit] = useState({});
+  const [timeModalHabitId, setTimeModalHabitId] = useState(null);
+  const [selectedTime, setSelectedTime] = useState('08:00');
+
 
   const token = localStorage.getItem('token');
 
   const fetchHabits = useCallback(async () => {
-    try {
-      const url = new URL('/api/habits/sorted', window.location.origin);
-      url.searchParams.append('sortBy', sortBy);
+  try {
+    const url = new URL('/api/habits/sorted', window.location.origin);
+    url.searchParams.append('sortBy', sortBy);
 
-      const res = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${token}` },
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+
+      console.log("Fetched habits:", data);  // Debug: check reminderTime values
+
+      setHabits(data);
+
+      const times = {};
+      data.forEach(habit => {
+        times[habit.id] = habit.reminderTime || '';  // Ensure fallback empty string
       });
-      if (res.ok) {
-        const data = await res.json();
-        setHabits(data);
+      setReminderTimes(times);
 
-        const times = {};
-        data.forEach(habit => {
-          if (habit.reminderTime) times[habit.id] = habit.reminderTime;
-        });
-        setReminderTimes(times);
-
-        const lastLogin = localStorage.getItem('lastLoginTime');
-        const now = Date.now();
-        if (!lastLogin || now - lastLogin > 24 * 3600 * 1000) {
-          alert('Welcome back! Remember to check in on your habits daily.');
-          localStorage.setItem('lastLoginTime', now);
-        }
-      } else {
-        console.error('Failed to fetch habits');
+      const lastLogin = localStorage.getItem('lastLoginTime');
+      const now = Date.now();
+      if (!lastLogin || now - lastLogin > 24 * 3600 * 1000) {
+        alert('Welcome back! Remember to check in on your habits daily.');
+        localStorage.setItem('lastLoginTime', now);
       }
-    } catch (err) {
-      console.error('Error fetching habits:', err);
+    } else {
+      console.error('Failed to fetch habits');
     }
-  }, [token, sortBy]);
+  } catch (err) {
+    console.error('Error fetching habits:', err);
+  }
+}, [token, sortBy]);
 
   useEffect(() => {
     fetchHabits();
@@ -127,6 +133,13 @@ function Dashboard({ user, setUser, onLogout }) {
  const handleLogoutClick = () => {
     if (onLogout) onLogout();
   };
+  const promptUserToPickTime = (habitId) => {
+  const habit = habits.find(h => h.id === habitId);
+  const existingTime = reminderTimes[habitId] || habit?.reminderTime || '08:00';
+  setSelectedTime(existingTime);
+  setTimeModalHabitId(habitId);
+};
+
 
   const handleDeleteHabit = async habitId => {
     try {
@@ -176,58 +189,70 @@ function Dashboard({ user, setUser, onLogout }) {
   };
 
   const openEditModal = habit => {
-    setEditHabit({
-      ...habit,
-      reminderTime: reminderTimes[habit.id] || '',
-    });
-  };
+  setEditHabit({
+    ...habit,
+    reminderTime: reminderTimes[habit.id] || habit.reminderTime || '',
+  });
+};
+
 
   const handleEditChange = (field, value) => {
     setEditHabit(prev => ({ ...prev, [field]: value }));
   };
 
-  const submitEditHabit = async () => {
-    if (!editHabit.title.trim()) {
-      alert('Title cannot be empty.');
-      return;
-    }
-    if (isNaN(editHabit.targetDays) || editHabit.targetDays <= 0) {
-      alert('Please enter a valid number for target days.');
-      return;
-    }
+ const submitEditHabit = async () => {
+  if (!editHabit.title.trim()) {
+    alert('Title cannot be empty.');
+    return;
+  }
+  if (isNaN(editHabit.targetDays) || editHabit.targetDays <= 0) {
+    alert('Please enter a valid number for target days.');
+    return;
+  }
 
-    try {
-      const res = await fetch(`/api/habits/${editHabit.id}/edit`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: editHabit.title.trim(),
-          targetDays: parseInt(editHabit.targetDays, 10),
-          completed: editHabit.completed,
-          reminderTime: editHabit.reminderTime?.trim() || null,
-        }),
-      });
+  try {
+    const res = await fetch(`/api/habits/${editHabit.id}/edit`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: editHabit.title.trim(),
+        targetDays: parseInt(editHabit.targetDays, 10),
+        completed: editHabit.completed,
+        reminderTime: editHabit.reminderTime?.trim() || null,
+      }),
+    });
 
-      if (res.ok) {
-        setEditHabit(null);
-        await fetchHabits();
-      } else {
-        alert('Failed to edit habit.');
-      }
-    } catch (err) {
-      console.error('Error editing habit:', err);
+    if (res.ok) {
+      await fetchHabits();  // Refresh habits & reminderTimes from backend
+      setEditHabit(null);   // Then close the modal
+    } else {
+      alert('Failed to edit habit.');
     }
-  };
+  } catch (err) {
+    console.error('Error editing habit:', err);
+  }
+};
 
-  const toggleReminder = habitId => {
-    const current = reminderTimes[habitId] || '';
-    const newTime = current ? '' : '08:00';
-    setReminderTimes(prev => ({ ...prev, [habitId]: newTime }));
-    updateReminder(habitId, newTime);
-  };
+
+const toggleReminder = habitId => {
+  const current = reminderTimes[habitId] || '';
+  const habit = habits.find(h => h.id === habitId);
+
+  if (!current && !habit?.reminderTime) {
+    promptUserToPickTime(habitId);
+    return;
+  }
+
+  const preservedTime = habit?.reminderTime || '08:00';
+  const newTime = current ? '' : preservedTime;
+
+  setReminderTimes(prev => ({ ...prev, [habitId]: newTime }));
+  updateReminder(habitId, newTime);
+};
+
 
   const updateReminder = async (habitId, timeStr) => {
     try {
@@ -248,6 +273,8 @@ function Dashboard({ user, setUser, onLogout }) {
       console.error('Error updating reminder:', err);
     }
   };
+  
+
 
   const handleProfilePicUpload = async () => {
     if (!newProfilePic) {
@@ -281,12 +308,16 @@ function Dashboard({ user, setUser, onLogout }) {
     }
   };
 
-  const formatDate = dateStr =>
-    new Date(dateStr).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+  const formatDate = (dateStr) => {
+  const [year, month, day] = dateStr.split('-');
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
 
   return (
     <div className="dashboard-container">
@@ -434,50 +465,102 @@ function Dashboard({ user, setUser, onLogout }) {
       </main>
 
       {editHabit && (
-        <div className="modal-overlay" onClick={() => setEditHabit(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2>Edit Habit</h2>
-            <label>
-              Title:
-              <input
-                type="text"
-                value={editHabit.title}
-                onChange={e => handleEditChange('title', e.target.value)}
-              />
-            </label>
-            <label>
-              Target Days:
-              <input
-                type="number"
-                value={editHabit.targetDays}
-                onChange={e => handleEditChange('targetDays', e.target.value)}
-              />
-            </label>
-            <label>
-              Completed:
-              <input
-                type="checkbox"
-                checked={editHabit.completed}
-                onChange={e => handleEditChange('completed', e.target.checked)}
-              />
-            </label>
-            <label>
-              Reminder Time:
-              <input
-                type="time"
-                value={editHabit.reminderTime || ''}
-                onChange={e => handleEditChange('reminderTime', e.target.value)}
-                disabled={editHabit.completed}
-              />
-            </label>
+  <div className="modal-overlay" onClick={() => setEditHabit(null)}>
+    <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <h2>Edit Habit</h2>
+      <label>
+        Title:
+        <input
+          type="text"
+          value={editHabit.title}
+          onChange={e => handleEditChange('title', e.target.value)}
+        />
+      </label>
+      <label>
+        Target Days:
+        <input
+          type="number"
+          value={editHabit.targetDays}
+          onChange={e => handleEditChange('targetDays', e.target.value)}
+        />
+      </label>
+      <label>
+        Completed:
+        <input
+          type="checkbox"
+          checked={editHabit.completed}
+          onChange={e => handleEditChange('completed', e.target.checked)}
+        />
+      </label>
 
-            <div className="modal-buttons">
-              <button onClick={submitEditHabit}>Save</button>
-              <button onClick={() => setEditHabit(null)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <label>
+        <input
+          type="checkbox"
+          checked={!!editHabit.reminderTime}
+          onChange={e => {
+            if (e.target.checked) {
+              // Set default reminder time if none exists
+              handleEditChange('reminderTime', editHabit.reminderTime || '08:00');
+            } else {
+              // Clear reminder time if unchecked
+              handleEditChange('reminderTime', '');
+            }
+          }}
+          disabled={editHabit.completed}
+        />
+        Remind me daily
+      </label>
+
+      <label>
+        Reminder Time:
+        <input
+          type="time"
+          value={editHabit.reminderTime || ''}
+          onChange={e => handleEditChange('reminderTime', e.target.value)}
+          disabled={editHabit.completed || !editHabit.reminderTime}
+        />
+      </label>
+
+      <div className="modal-buttons">
+        <button onClick={submitEditHabit}>Save</button>
+        <button onClick={() => setEditHabit(null)}>Cancel</button>
+      </div>
+    </div>
+  </div>
+)}
+
+{timeModalHabitId && (
+  <div className="modal-overlay" onClick={() => setTimeModalHabitId(null)}>
+    <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <h2>Set Reminder Time</h2>
+      <label>
+        Reminder Time:
+        <input
+          type="time"
+          value={selectedTime}
+          onChange={e => setSelectedTime(e.target.value)}
+        />
+      </label>
+      <div className="modal-buttons">
+        <button
+          onClick={() => {
+            updateReminder(timeModalHabitId, selectedTime);
+            setReminderTimes(prev => ({
+              ...prev,
+              [timeModalHabitId]: selectedTime
+            }));
+            setTimeModalHabitId(null);
+          }}
+        >
+          Save
+        </button>
+        <button onClick={() => setTimeModalHabitId(null)}>Cancel</button>
+      </div>
+    </div>
+  </div>
+)}
+
+
 
       {confirmDeleteHabitId && (
         <div className="modal-overlay" onClick={() => setConfirmDeleteHabitId(null)}>

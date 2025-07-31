@@ -21,11 +21,13 @@ public class HabitDTO {
     private boolean completed;
     private Set<LocalDate> completedDays;
 
+    private String reminderTime;  // NEW FIELD: "HH:mm" format, nullable
+
     public HabitDTO() {}
 
     public HabitDTO(Long id, String title, int targetDays, LocalDate startDate,
                     int currentStreak, LocalDate lastCheckInDate, boolean completed,
-                    Set<LocalDate> completedDays) {
+                    Set<LocalDate> completedDays, String reminderTime) {
         this.id = id;
         this.title = title;
         this.targetDays = targetDays;
@@ -34,9 +36,11 @@ public class HabitDTO {
         this.lastCheckInDate = lastCheckInDate;
         this.completed = completed;
         this.completedDays = completedDays;
+        this.reminderTime = reminderTime;
     }
 
     // Getters and Setters
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -60,7 +64,7 @@ public class HabitDTO {
 
     public Set<LocalDate> getCompletedDays() { return completedDays; }
     public void setCompletedDays(Set<LocalDate> completedDays) { this.completedDays = completedDays; }
+
+    public String getReminderTime() { return reminderTime; }
+    public void setReminderTime(String reminderTime) { this.reminderTime = reminderTime; }
 }
-
-
-

@@ -18,19 +18,24 @@ public class HabitReminderService {
     }
 
     public void createOrUpdateReminder(Habit habit, String reminderTimeStr) {
-        LocalTime reminderTime = LocalTime.parse(reminderTimeStr);
-        Long habitId = habit.getId();
+        // Parse and truncate to minute precision (strip seconds & nanos)
+        LocalTime reminderTime = LocalTime.parse(reminderTimeStr)
+                .withSecond(0)
+                .withNano(0);
 
+        Long habitId = habit.getId();
         Optional<HabitReminder> existing = reminderRepo.findByHabitId(habitId);
 
         if (existing.isPresent()) {
             HabitReminder reminder = existing.get();
             reminder.setReminderTime(reminderTime);
+            reminder.setEnabled(true); // Ensure it's active
             reminderRepo.save(reminder);
         } else {
             HabitReminder reminder = new HabitReminder();
             reminder.setHabit(habit);
             reminder.setReminderTime(reminderTime);
+            reminder.setEnabled(true); // New reminders should be enabled
             reminderRepo.save(reminder);
         }
     }
@@ -44,6 +49,7 @@ public class HabitReminderService {
         return reminderRepo.findByHabitId(habitId);
     }
 }
+
 
 
 

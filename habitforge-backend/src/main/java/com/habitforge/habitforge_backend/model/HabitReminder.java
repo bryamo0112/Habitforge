@@ -14,7 +14,7 @@ public class HabitReminder {
     @JoinColumn(name = "habit_id", nullable = false, unique = true)
     private Habit habit;
 
-    private LocalTime reminderTime; // E.g., 08:00 AM
+    private LocalTime reminderTime; 
 
     private boolean enabled = true;
 

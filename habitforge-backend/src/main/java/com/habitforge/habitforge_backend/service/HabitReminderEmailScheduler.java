@@ -20,35 +20,39 @@ public class HabitReminderEmailScheduler {
     }
 
     @Scheduled(cron = "0 * * * * *") // Every minute at 0 seconds
-    public void sendDueReminders() {
-        LocalTime now = LocalTime.now().withSecond(0).withNano(0); // current time rounded to minute
+public void sendDueReminders() {
+    LocalTime now = LocalTime.now().withSecond(0).withNano(0);
+    LocalTime oneMinuteAgo = now.minusMinutes(1);
+    LocalTime oneMinuteAhead = now.plusMinutes(1);
 
-        List<HabitReminder> dueReminders = reminderRepository.findByReminderTimeAndEnabledTrue(now);
+    List<HabitReminder> dueReminders = reminderRepository
+    .findDueRemindersWithHabitAndUser(oneMinuteAgo, oneMinuteAhead);
 
-        for (HabitReminder reminder : dueReminders) {
-            var habit = reminder.getHabit();
-            if (habit == null) continue;
 
-            var user = habit.getUser();
-            if (user == null) continue;
+    System.out.println("Scheduler checked at: " + now + " | Found " + dueReminders.size() + " reminders.");
 
-            String email = user.getEmail();
-            if (email == null || email.isEmpty()) continue;
+    for (HabitReminder reminder : dueReminders) {
+        var habit = reminder.getHabit();
+        if (habit == null) continue;
 
-            String subject = "Habit Reminder: " + habit.getTitle();
-            String content = String.format("""
-                <p>Hi %s,</p>
-                <p>This is your daily reminder to work on your habit: <strong>%s</strong>.</p>
-                <p>Keep up the great work!</p>
-                """, user.getUsername(), habit.getTitle());
+        var user = habit.getUser();
+        if (user == null) continue;
 
-            try {
-                emailService.sendHtmlEmail(email, subject, content);
-            } catch (Exception e) {
-                System.err.println("Failed to send reminder email to " + email + ": " + e.getMessage());
-            }
+        String email = user.getEmail();
+        if (email == null || email.isEmpty()) continue;
+
+        String subject = "Habit Reminder: " + habit.getTitle();
+        String content = String.format("""
+            <p>Hi %s,</p>
+            <p>This is your daily reminder to check in on your habit: <strong>%s</strong>.</p>
+            <p>Keep up the great work!</p>
+            """, user.getUsername(), habit.getTitle());
+
+        try {
+            emailService.sendHtmlEmail(email, subject, content);
+        } catch (Exception e) {
+            System.err.println("Failed to send reminder email to " + email + ": " + e.getMessage());
         }
     }
 }
-
-
+}

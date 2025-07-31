@@ -7,6 +7,7 @@ import com.habitforge.habitforge_backend.model.User;
 import com.habitforge.habitforge_backend.repository.HabitRepository;
 import com.habitforge.habitforge_backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import java.time.ZoneId;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -61,7 +62,7 @@ public class HabitService {
         Habit habit = habitRepo.findById(habitId).orElse(null);
         if (habit == null || !habit.getUser().equals(user)) return false;
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.systemDefault());
 
         // Prevent double check-in for today
         if (today.equals(habit.getLastCheckInDate())) {
@@ -200,6 +201,15 @@ public class HabitService {
 
     // ------------------ Helper: DTO conversion ------------------
     private HabitDTO convertToDTO(Habit habit) {
+        String reminderTimeStr = null;
+        if (habit.getReminder() != null && habit.getReminder().getReminderTime() != null) {
+            reminderTimeStr = habit.getReminder().getReminderTime().toString(); // e.g. "08:00"
+            // Optional: trim seconds if present
+            if (reminderTimeStr.length() > 5) {
+                reminderTimeStr = reminderTimeStr.substring(0, 5);
+            }
+        }
+
         return new HabitDTO(
                 habit.getId(),
                 habit.getTitle(),
@@ -208,15 +218,8 @@ public class HabitService {
                 habit.getCurrentStreak(),
                 habit.getLastCheckInDate(),
                 habit.isCompleted(),
-                Set.copyOf(habit.getCompletedDays())
+                Set.copyOf(habit.getCompletedDays()),
+                reminderTimeStr
         );
     }
 }
-
-
-
-
-
-
-
-
