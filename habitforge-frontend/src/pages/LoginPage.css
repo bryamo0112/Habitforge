@@ -22,7 +22,7 @@
 }
 
 .login-form input {
-  width: 100%;
+  width: 93.6%;
   padding: 12px;
   margin-bottom: 16px;
   border: 1px solid #ccc;
@@ -59,3 +59,24 @@
   text-align: center;
   margin-bottom: 16px;
 }
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-container input {
+  padding-right: 2.5rem; /* Leave space for the icon */
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 0.75rem;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  opacity: 0.7;
+  margin-bottom: 15px;
+}
+
+

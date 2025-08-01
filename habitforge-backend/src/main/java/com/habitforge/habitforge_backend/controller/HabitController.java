@@ -49,7 +49,7 @@ public class HabitController {
         if (success) {
             return ResponseEntity.ok("Check-in successful!");
         } else {
-            return ResponseEntity.badRequest().body("Already checked in today or habit not found.");
+            return ResponseEntity.badRequest().body("Already checked in today.");
         }
     }
 

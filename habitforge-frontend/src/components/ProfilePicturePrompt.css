@@ -8,7 +8,8 @@
   border-radius: 20px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   width: 500px;
-  margin-top: 2rem;
+  margin-top: 10rem;
+  margin-left: 45rem;
 }
 
 /* Default profile picture size */
@@ -98,6 +99,7 @@
   margin-top: 1rem;
   display: flex;
   justify-content: space-around;
+  margin-right: 1.5rem;
 }
 
 .modal-buttons button {
@@ -133,4 +135,5 @@
   object-fit: cover;
   margin: 1rem 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-left: 6.5rem;
 }

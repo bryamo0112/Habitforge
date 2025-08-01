@@ -84,7 +84,7 @@ public class HabitService {
             habit.setCompleted(true);
         }
 
-        // *** Note: Do NOT reset or update reminder here! Preserve existing reminderTime ***
+        
 
         habitRepo.save(habit);
         return true;

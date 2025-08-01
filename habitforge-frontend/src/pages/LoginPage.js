@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LoginPage.css';
+import openEye from '../components/assets/icons8-eye-24.png';
+import closedEye from '../components/assets/icons8-closed-eye-32.png';
+
+
+
 
 const LoginPage = ({ setUser }) => {
   const navigate = useNavigate();
@@ -8,6 +13,8 @@ const LoginPage = ({ setUser }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -97,16 +104,25 @@ const LoginPage = ({ setUser }) => {
           aria-label="Username"
           autoComplete="username"
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          name="password"
-          aria-label="Password"
-          autoComplete="current-password"
-        />
+       <div className="password-input-container">
+  <input
+    type={showPassword ? 'text' : 'password'}
+    placeholder="Password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    required
+    name="password"
+    aria-label="Password"
+    autoComplete="current-password"
+  />
+  <img
+    src={showPassword ? openEye : closedEye}
+    alt={showPassword ? 'Hide password' : 'Show password'}
+    onClick={() => setShowPassword(prev => !prev)}
+    className="password-toggle-icon"
+  />
+</div>
+
         <button type="submit" disabled={loading}>
           {loading ? 'Logging in...' : 'Login'}
         </button>

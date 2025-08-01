@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SignUpPage.css';
+import openEye from '../components/assets/icons8-eye-24.png';
+import closedEye from '../components/assets/icons8-closed-eye-32.png';
+
 
 const SignUpPage = () => {
   const navigate = useNavigate();
@@ -8,6 +11,7 @@ const SignUpPage = () => {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -50,13 +54,25 @@ const SignUpPage = () => {
           required
         />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className="password-input-container2">
+  <input
+    type={showPassword ? 'text' : 'password'}
+    placeholder="Password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    required
+    name="password"
+    aria-label="Password"
+    autoComplete="current-password"
+  />
+  <img
+    src={showPassword ? openEye : closedEye}
+    alt={showPassword ? 'Hide password' : 'Show password'}
+    onClick={() => setShowPassword(prev => !prev)}
+    className="password-toggle-icon2"
+  />
+</div>
+
 
         {errorMsg && <div className="error-message">{errorMsg}</div>}
         {successMsg && <div className="success-message">{successMsg}</div>}

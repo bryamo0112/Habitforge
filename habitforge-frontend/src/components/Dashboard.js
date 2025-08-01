@@ -379,7 +379,7 @@ const toggleReminder = habitId => {
               </select>
             </label>
 
-            <label>
+            <label className='filter-label'>
               Filter:&nbsp;
               <select value={filterByStatus} onChange={e => setFilterByStatus(e.target.value)}>
                 <option value="all">All</option>
@@ -494,6 +494,7 @@ const toggleReminder = habitId => {
       </label>
 
       <label>
+        Remind me daily
         <input
           type="checkbox"
           checked={!!editHabit.reminderTime}
@@ -508,7 +509,6 @@ const toggleReminder = habitId => {
           }}
           disabled={editHabit.completed}
         />
-        Remind me daily
       </label>
 
       <label>

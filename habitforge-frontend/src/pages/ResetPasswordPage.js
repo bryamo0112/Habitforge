@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './ResetPasswordPage.css';
+import openEye from '../components/assets/icons8-eye-24.png';
+import closedEye from '../components/assets/icons8-closed-eye-32.png';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
@@ -12,6 +14,7 @@ const ResetPasswordPage = () => {
   const [message, setMessage] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Optional: Prepopulate from verification page
   useEffect(() => {
@@ -72,14 +75,26 @@ const ResetPasswordPage = () => {
           onChange={(e) => setCode(e.target.value)}
           required
         />
-        <input
-          type="password"
-          placeholder="New password (min 6 characters)"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-          minLength={6}
-        />
+        <div className="password-input-container3">
+  <input
+    type={showPassword ? 'text' : 'password'}
+    placeholder="New password (min 6 characters)"
+    value={newPassword}
+    onChange={(e) => setNewPassword(e.target.value)}
+    required
+    minLength={6}
+    name="newPassword"
+    aria-label="New password"
+    autoComplete="new-password"
+  />
+  <img
+    src={showPassword ? openEye : closedEye}
+    alt={showPassword ? 'Hide password' : 'Show password'}
+    onClick={() => setShowPassword(prev => !prev)}
+    className="password-toggle-icon3"
+  />
+</div>
+
 
         {message && <div className="info-message">{message}</div>}
         {errorMsg && <div className="error-message">{errorMsg}</div>}
