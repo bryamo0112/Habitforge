@@ -66,20 +66,33 @@ public class HabitController {
 
     // Edit habit fields (title, targetDays, completed, reminderTime)
     @PutMapping("/{habitId}/edit")
-    public ResponseEntity<String> editHabit(
-            @PathVariable Long habitId,
-            @RequestBody HabitEditDTO dto,
-            Authentication auth) {
-        if (dto == null) {
-            return ResponseEntity.badRequest().body("Invalid habit data.");
-        }
-        boolean updated = habitService.editHabit(auth.getName(), habitId, dto);
-        if (updated) {
-            return ResponseEntity.ok("Habit updated.");
-        } else {
-            return ResponseEntity.badRequest().body("Unable to update habit.");
-        }
+public ResponseEntity<String> editHabit(
+        @PathVariable Long habitId,
+        @RequestBody HabitEditDTO dto,
+        Authentication auth) {
+    if (dto == null || isEmptyEdit(dto)) {
+        return ResponseEntity.badRequest().body("Unable to update habit.");
     }
+    boolean updated = habitService.editHabit(auth.getName(), habitId, dto);
+    if (updated) {
+        return ResponseEntity.ok("Habit updated.");
+    } else {
+        return ResponseEntity.badRequest().body("Unable to update habit.");
+    }
+}
+
+// Helper method to check if all fields are empty or default
+private boolean isEmptyEdit(HabitEditDTO dto) {
+    // Example checks — adjust based on which fields are editable
+    boolean titleEmpty = (dto.getTitle() == null || dto.getTitle().trim().isEmpty());
+    boolean targetDaysInvalid = (dto.getTargetDays() <= 0);
+    // completed is boolean, so default false is valid - assume no empty check needed
+    boolean reminderTimeEmpty = (dto.getReminderTime() == null || dto.getReminderTime().trim().isEmpty());
+
+    // Return true if all editable fields are "empty"
+    return titleEmpty && targetDaysInvalid && reminderTimeEmpty;
+}
+
 
     // Get habits sorted by a given field and order
     @GetMapping("/sorted")

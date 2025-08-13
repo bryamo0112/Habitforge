@@ -54,6 +54,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/users/set-username").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/users/*/upload-profile-picture").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/users/*/mark-prompted").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/users/logout").authenticated()
                 .requestMatchers("/api/habits/**").authenticated()
 
                 .anyRequest().denyAll()
