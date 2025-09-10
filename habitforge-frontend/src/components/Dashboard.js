@@ -465,7 +465,7 @@ const toggleReminder = habitId => {
       </main>
 
       {editHabit && (
-  <div className="modal-overlay" onClick={() => setEditHabit(null)}>
+  <div className="modal-overlay" data-testid="edit-modal"onClick={() => setEditHabit(null)}>
     <div className="modal-content" onClick={e => e.stopPropagation()}>
       <h2>Edit Habit</h2>
       <label>
@@ -530,7 +530,7 @@ const toggleReminder = habitId => {
 )}
 
 {timeModalHabitId && (
-  <div className="modal-overlay" onClick={() => setTimeModalHabitId(null)}>
+  <div className="modal-overlay" data-testid="time-modal" onClick={() => setTimeModalHabitId(null)}>
     <div className="modal-content" onClick={e => e.stopPropagation()}>
       <h2>Set Reminder Time</h2>
       <label>

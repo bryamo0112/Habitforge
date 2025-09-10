@@ -151,6 +151,7 @@ function ProfilePicturePrompt({ user, setUser }) {
               accept="image/*"
               onChange={handleFileChange}
               disabled={uploading}
+              aria-label="Choose profile picture"
             />
 
             {errorMsg && <div className="error-message">{errorMsg}</div>}
